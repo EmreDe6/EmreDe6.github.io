@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid Template 1</title>
+    <style>
+        body { 
+            display: grid;
+            grid-template-areas: 
+                "header header header"
+                "nav article ads"
+                "nav footer footer";
+            grid-template-rows: 80px 1fr 70px;  
+            grid-template-columns: 20% 1fr 15%;
+            grid-row-gap: 10px;
+            grid-column-gap: 10px;
+            height: 100vh;
+            margin: 0;
+        }  
+        header, footer, article, nav, div {
+            padding: 1.2em;
+            background: #009aa9; /* Added missing semicolon */
+        }
+        #pageHeader {
+            grid-area: header;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #pageFooter {
+            grid-area: footer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #mainArticle { 
+            grid-area: article;      
+        }
+        #mainNav { 
+            grid-area: nav; 
+        }
+        #siteAds { 
+            grid-area: ads; 
+        } 
+        /* Stack the layout on small devices/viewports. */
+        @media all and (max-width: 575px) {
+            body { 
+                grid-template-areas: 
+                    "header"
+                    "article"
+                    "ads"
+                    "nav"
+                    "footer";
+                grid-template-rows: 80px 1fr 70px 1fr 70px;  
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="pageHeader">Başlık
+        <div style="float: right;">
+            <input type="text" id="searchInput" placeholder="Search...">
+            <button onclick="searchFunction()">Search</button>
+        </div>
+    </header>
+    <article id="mainArticle">
+        <h3>Ortak Alan Klasörleri</h3>
+        <ul>
+            <li><a href="BILGILENDIRME/">BILGILENDIRME</a></li>
+            <li><a href="MAGAZA PROJELERİ/">MAĞAZA PROJELERİ</a></li>
+            <li><a href="file1.html">File 1</a></li>
+            <li><a href="file2.html">File 2</a></li>
+        </ul>
+    </article>
+    <nav id="mainNav">
+        <h3>Duyurular</h3>
+        <p>Bugün 23 Nisan 27 Aralık Atatürk'ün Ankara'ya
+        </p>
+    </nav>
+    <div class="content">
+        <h3>GitHub Test</h3>
+        <p>Lorem ipsum odor amet, consectetuer adipiscing elit. Ridiculus sit nisl laoreet facilisis aliquet. Potenti dignissim litora eget montes rhoncus sapien neque urna. Cursus libero sapien integer magnis ligula lobortis quam ut.</p>
+    </div>
+    
+    <div id="siteAds">
+        Kampanya Görselleri
+        <p>1 Ocak - 30 Ocak 2025</p>
+    </div>
+    <footer id="pageFooter">Footer</footer>
+    <script>
+        function searchFunction() {
+            var input = document.getElementById('searchInput').value;
+            alert('Searching for: ' + input);
+        }
+    </script>
+</body>
+</html>
