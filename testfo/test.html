@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Storage Browser</title>
+    <style>
+        /* ...existing styles... */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="path-nav" id="pathNav">
+            <a href="#" onclick="navigateToPath('/')">/</a>
+        </div>
+        <div id="loading" class="loading">Loading...</div>
+        <div id="error" class="error"></div>
+        <ul class="file-list" id="fileList"></ul>
+    </div>
+
+    <script>
+        const STORAGE_URL = 'https://061910.z38.web.core.windows.net/ortakalan/bilgilendirme/';
+        const CONTAINER_NAME = 'ortakalan';
+        let currentPath = '/';
+
+        async function listContents(path) {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const fileList = document.getElementById('fileList');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            fileList.innerHTML = '';
+
+            try {
+                const url = `${STORAGE_URL}/${CONTAINER_NAME}?restype=container&comp=list&prefix=${path.replace(/^\//, '')}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error('Failed to fetch files');
+                
+                const data = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data, "text/xml");
+                const blobs = xmlDoc.getElementsByTagName("Blob");
+                
+                const items = Array.from(blobs).map(blob => {
+                    const name = blob.getElementsByTagName("Name")[0].textContent;
+                    const size = blob.getElementsByTagName("Content-Length")[0].textContent;
+                    return {
+                        name: name.split('/').pop(),
+                        path: name,
+                        size: parseInt(size),
+                        isDirectory: name.includes('/') && name.endsWith('/')
+                    };
+                });
+
+                displayItems(items);
+                updatePathNav(path);
+            } catch (err) {
+                error.textContent = 'Failed to load files: ' + err.message;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayItems(items) {
+            const fileList = document.getElementById('fileList');
+            
+            items.sort((a, b) => {
+                if (a.isDirectory === b.isDirectory) return a.name.localeCompare(b.name);
+                return a.isDirectory ? -1 : 1;
+            });
+
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'file-item';
+                li.innerHTML = `
+                    <span class="file-icon ${item.isDirectory ? 'folder' : 'file'}">
+                        ${item.isDirectory ? '📁' : '📄'}
+                    </span>
+                    <span>${item.name}</span>
+                    ${!item.isDirectory ? `<span style="margin-left: auto">${formatSize(item.size)}</span>` : ''}
+                `;
+                
+                li.onclick = () => item.isDirectory ? 
+                    listContents(item.path) : 
+                    downloadFile(item.path);
+                    
+                fileList.appendChild(li);
+            });
+        }
+
+        function formatSize(bytes) {
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            if (bytes === 0) return '0 Bytes';
+            const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+            return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+        }
+
+        async function downloadFile(path) {
+            try {
+                const response = await fetch(`${STORAGE_URL}/${CONTAINER_NAME}/${path}`);
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = path.split('/').pop();
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                alert('Failed to download file');
+            }
+        }
+
+        // Initialize
+        listContents('/');
+    </script>
+</body>
+</html>
